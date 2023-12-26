@@ -1,43 +1,38 @@
 package pl.com.przepiora.shoppinglist
 
 import android.annotation.SuppressLint
-import android.graphics.Paint
-
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ShapeDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,40 +42,98 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import pl.com.przepiora.shoppinglist.model.Entry
 import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
 
 class MainActivity : ComponentActivity() {
+    var showDialogGlobal = false
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         var e1 = Entry(true, "e1111111")
         var e2 = Entry(false, "eee222")
-        setContent {
-            ShoppingListTheme {
 
+        setContent {
+
+            ShoppingListTheme {
+                val showDialog = remember { mutableStateOf(false) }
+
+                if (showDialogGlobal) {
+                    MinimalDialog {
+
+                    }
+                }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = { TopBar()
+                    topBar = {
+                        TopBar()
                     }
 
                 ) { paddingValues ->
-                    val xxx = listOf(e1,e1,e2,e1,e2,e2,e1,e1,e1,e2,e2,e1,e1,e2,e1,e2,e2,e1,e1,e1,e2,e2)
-                    LazyColumn(
-                        modifier = Modifier.padding(top=36.dp).background(color = Color.DarkGray)
-                    ){
-                        items(items = xxx){
-                            EntryCard(it)
+                    val xxx = listOf(
+                        e1,
+                        e1,
+                        e2,
+                        e1,
+                        e2,
+                        e2,
+                        e1,
+                        e1,
+                        e1,
+                        e2,
+                        e2,
+                        e1,
+                        e1,
+                        e2,
+                        e1,
+                        e2,
+                        e2,
+                        e1,
+                        e1,
+                        e1,
+                        e2,
+                        e2
+                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(top = 36.dp)
+                                .background(color = Color.DarkGray)
+                        ) {
+                            items(items = xxx) {
+                                EntryCard(it)
+                            }
+                        }
+                        FloatingActionButton(modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(15.dp)
+                            .size(width = 350.dp, height = 50.dp)
+                            .border(3.dp, Color.Black, RoundedCornerShape(50.dp) ),
+                            shape = RoundedCornerShape(50.dp),
+                            containerColor = Color.Yellow,
+                            onClick = { /*TODO*/ })
+                        {
+                            Row {
+                                Icon(
+                                    imageVector = Icons.Default.Create,
+                                    contentDescription = "Add new entry"
+                                )
+                                Text(text = "  Add product")
+                            }
                         }
                     }
+
 
                 }
 
@@ -149,7 +202,9 @@ fun EntryCard(entry: Entry) {
 
             }
         }
-
+        var showDialog by remember {
+            mutableStateOf(false)
+        }
         Card(
             modifier = Modifier
                 .size(width = 70.dp, height = 70.dp)
@@ -157,9 +212,10 @@ fun EntryCard(entry: Entry) {
                 .fillMaxSize(),
             colors = CardDefaults.cardColors(Color.DarkGray),
             shape = RoundedCornerShape(10.dp),
-            onClick = { Log.d("Click", "CardExample: Card Click") },
+            onClick = { Log.d("xxx", "DELETE") },
             border = BorderStroke(3.dp, Color.LightGray)
         ) {
+
             Row(
                 modifier = Modifier.fillMaxSize(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -198,5 +254,26 @@ fun TopBar() {
             text = "Synch: 12.12.2023 12:00",
             textAlign = TextAlign.Right
         )
+    }
+}
+
+@Composable
+fun MinimalDialog(onDismissRequest: () -> Unit) {
+    Dialog(onDismissRequest = { onDismissRequest() }) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Text(
+                text = "This is a minimal dialog",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize(Alignment.Center),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
