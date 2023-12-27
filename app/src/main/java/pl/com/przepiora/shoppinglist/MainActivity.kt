@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -32,9 +34,12 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,22 +59,23 @@ import pl.com.przepiora.shoppinglist.model.Entry
 import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
 
 class MainActivity : ComponentActivity() {
-    var showDialogGlobal = false
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+        //TODO delete that
         var e1 = Entry(true, "e1111111")
         var e2 = Entry(false, "eee222")
 
         setContent {
-
             ShoppingListTheme {
-                val showDialog = remember { mutableStateOf(false) }
+                var showDialog = remember { mutableStateOf(false) }
 
-                if (showDialogGlobal) {
-                    MinimalDialog {
+                if (showDialog.value) {
+                    AddProductDialog(showDialog) {
 
                     }
                 }
@@ -119,10 +126,10 @@ class MainActivity : ComponentActivity() {
                             .align(Alignment.BottomCenter)
                             .padding(15.dp)
                             .size(width = 350.dp, height = 50.dp)
-                            .border(3.dp, Color.Black, RoundedCornerShape(50.dp) ),
+                            .border(3.dp, Color.Black, RoundedCornerShape(50.dp)),
                             shape = RoundedCornerShape(50.dp),
                             containerColor = Color.Yellow,
-                            onClick = { /*TODO*/ })
+                            onClick = { showDialog.value = !showDialog.value })
                         {
                             Row {
                                 Icon(
@@ -257,23 +264,56 @@ fun TopBar() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MinimalDialog(onDismissRequest: () -> Unit) {
+fun AddProductDialog(showDialog: MutableState<Boolean>, onDismissRequest: () -> Unit) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(16.dp),
+                .height(150.dp)
+                .padding(0.dp),
             shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(Color.White),
+            border = BorderStroke(5.dp, Color.Black)
         ) {
-            Text(
-                text = "This is a minimal dialog",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentSize(Alignment.Center),
-                textAlign = TextAlign.Center,
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                var text by remember {
+                    mutableStateOf("")
+                }
+                OutlinedTextField(
+                    modifier = Modifier.padding(top = 15.dp),
+                    value = text,
+                    label = { Text(text = "Add new product to list")},
+                    maxLines = 1,
+                    onValueChange = {
+                       text = it
+                    }
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    Button(
+                        onClick = { /*TODO*/ }
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .size(width = 120.dp, height = 20.dp)
+                                .align(Alignment.CenterVertically),
+                            textAlign = TextAlign.Center,
+                            text = "Save"
+                        )
+                    }
+                    Button(onClick = {showDialog.value = false  }) {
+                        Text(text = "Cancel")
+                    }
+                }
+            }
         }
     }
 }
