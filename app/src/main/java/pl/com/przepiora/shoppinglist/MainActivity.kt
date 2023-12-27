@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,10 +36,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,26 +54,38 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import pl.com.przepiora.shoppinglist.model.Entry
+import pl.com.przepiora.shoppinglist.service.EntryRepository
+import pl.com.przepiora.shoppinglist.service.EntryRepositoryInMemory
 import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
 
 class MainActivity : ComponentActivity() {
-
+    var entryRepository = EntryRepositoryInMemory();
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
 
-        //TODO delete that
-        var e1 = Entry(true, "e1111111")
-        var e2 = Entry(false, "eee222")
+//        //TODO delete that
+//        var e1 = Entry(true, "e1111111")
+//        var e2 = Entry(false, "eee222")
+//        val entryList = listOf(
+//            e1,
+//            e1,
+//            e2,
+//            e1
+//        )
 
         setContent {
             ShoppingListTheme {
                 var showDialog = remember { mutableStateOf(false) }
+                val entryList = remember { mutableStateListOf<Entry>() }
+                entryRepository.update(entryList)
+                entryList.sortBy { e-> e.text }
+                entryList.sortBy { e -> e.isDone }
 
                 if (showDialog.value) {
-                    AddProductDialog(showDialog) {
+                    AddProductDialog(showDialog, entryRepository, entryList) {
 
                     }
                 }
@@ -83,43 +93,30 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
                         TopBar()
-                    }
+                    },
+                    containerColor = Color.DarkGray
 
                 ) { paddingValues ->
-                    val xxx = listOf(
-                        e1,
-                        e1,
-                        e2,
-                        e1,
-                        e2,
-                        e2,
-                        e1,
-                        e1,
-                        e1,
-                        e2,
-                        e2,
-                        e1,
-                        e1,
-                        e2,
-                        e1,
-                        e2,
-                        e2,
-                        e1,
-                        e1,
-                        e1,
-                        e2,
-                        e2
-                    )
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 36.dp)
-                                .background(color = Color.DarkGray)
-                        ) {
-                            items(items = xxx) {
-                                EntryCard(it)
+                        if (entryList.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "The list is empty. Please add products...",
+                                    modifier = Modifier.align(Alignment.Center),
+                                    color = Color.White
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 36.dp)
+                                    .background(color = Color.DarkGray)
+                            ) {
+                                items(items = entryList) {
+                                    EntryCard(it, entryList)
+                                }
                             }
                         }
                         FloatingActionButton(modifier = Modifier
@@ -140,8 +137,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
-
                 }
 
             }
@@ -149,36 +144,36 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@SuppressLint("UnrememberedMutableState")
-@Composable
-fun Entry(isDone: Boolean, text: String) {
-    var isDoneMutable by remember {
-        mutableStateOf(isDone)
-    }
-    Row(modifier = Modifier.background(Color.Cyan)) {
-        Checkbox(checked = isDoneMutable, onCheckedChange = { isDoneMutable = !isDoneMutable })
-        Text(
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .fillMaxWidth(),
-            text = text
-        )
-    }
-}
+//@SuppressLint("UnrememberedMutableState")
+//@Composable
+//fun Entry(isDone: Boolean, text: String) {
+//    var isDoneMutable by remember {
+//        mutableStateOf(isDone)
+//    }
+//    Row(modifier = Modifier.background(Color.Cyan)) {
+//        Checkbox(checked = isDoneMutable, onCheckedChange = { isDoneMutable = !isDoneMutable })
+//        Text(
+//            modifier = Modifier
+//                .align(Alignment.CenterVertically)
+//                .fillMaxWidth(),
+//            text = text
+//        )
+//    }
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntryCard(entry: Entry) {
+fun EntryCard(entry: Entry, entryList: MutableList<Entry>) {
     val color: CardColors
     val icon: ImageVector
 
     Log.d("Entry data", entry.toString())
     if (entry.isDone) {
-        color = CardDefaults.cardColors(Color.Green)
-        icon = Icons.Default.ShoppingCart
-    } else {
         color = CardDefaults.cardColors(Color.LightGray)
         icon = Icons.Default.CheckCircle
+    } else {
+        color = CardDefaults.cardColors(Color.Green)
+        icon = Icons.Default.ShoppingCart
     }
 
     Row(
@@ -190,7 +185,12 @@ fun EntryCard(entry: Entry) {
                 .padding(5.dp),
             colors = color,
             shape = RoundedCornerShape(10.dp),
-            onClick = { Log.d("Click", "CardExample: Card Click") },
+            onClick = {
+                val index = entryList.indexOf(entry)
+                entry.isDone = !entry.isDone
+                entryList.add(index, entry)
+                entryList.removeAt(index + 1)
+            },
 
             ) {
             Row(
@@ -266,7 +266,13 @@ fun TopBar() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductDialog(showDialog: MutableState<Boolean>, onDismissRequest: () -> Unit) {
+fun AddProductDialog(
+    showDialog: MutableState<Boolean>,
+    entryRepository: EntryRepository,
+    entryList: MutableList<Entry>,
+    onDismissRequest: () -> Unit
+) {
+    var saveButtonIsEnabled = false
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -286,10 +292,11 @@ fun AddProductDialog(showDialog: MutableState<Boolean>, onDismissRequest: () -> 
                 OutlinedTextField(
                     modifier = Modifier.padding(top = 15.dp),
                     value = text,
-                    label = { Text(text = "Add new product to list")},
+                    label = { Text(text = "Add new product to list") },
                     maxLines = 1,
                     onValueChange = {
-                       text = it
+                        text = it
+                        saveButtonIsEnabled = text.isNotEmpty()
                     }
                 )
 
@@ -299,7 +306,12 @@ fun AddProductDialog(showDialog: MutableState<Boolean>, onDismissRequest: () -> 
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     Button(
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            val entry = Entry(false, text)
+                            entryList.add(entry)
+                            showDialog.value = false
+                        },
+                        enabled = saveButtonIsEnabled
                     ) {
                         Text(
                             modifier = Modifier
@@ -309,7 +321,7 @@ fun AddProductDialog(showDialog: MutableState<Boolean>, onDismissRequest: () -> 
                             text = "Save"
                         )
                     }
-                    Button(onClick = {showDialog.value = false  }) {
+                    Button(onClick = { showDialog.value = false }) {
                         Text(text = "Cancel")
                     }
                 }
