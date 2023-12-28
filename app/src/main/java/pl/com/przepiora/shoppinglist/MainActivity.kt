@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -84,7 +85,7 @@ class MainActivity : ComponentActivity() {
                 entryList.sortBy { e-> e.text }
                 entryList.sortBy { e -> e.isDone }
 
-                if (showDialog.value) {
+                AnimatedVisibility (showDialog.value) {
                     AddProductDialog(showDialog, entryRepository, entryList) {
 
                     }
