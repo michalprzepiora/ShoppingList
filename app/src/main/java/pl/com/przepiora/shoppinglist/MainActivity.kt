@@ -1,6 +1,7 @@
 package pl.com.przepiora.shoppinglist
 
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -39,6 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -46,9 +48,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -73,8 +76,8 @@ class MainActivity : ComponentActivity() {
                 val showDialog = remember { mutableStateOf(false) }
                 val entryList = remember { mutableStateListOf<Entry>() }
                 entryRepository.update(entryList)
-                entryList.sortBy { e -> e.text }
-                entryList.sortBy { e -> e.isDone }
+                entryList.sortBy { entry -> entry.text }
+                entryList.sortBy { entry -> entry.isDone }
 
                 AnimatedVisibility(showDialog.value) {
                     AddProductDialog(showDialog, entryList) {
@@ -137,9 +140,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@SuppressLint("UnnecessaryComposedModifier")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntryCard(entry: Entry, entryList: MutableList<Entry>, animateItemPlacement: Modifier) {
+fun EntryCard(entry: Entry, entryList: MutableList<Entry>, modifier: Modifier) {
     val color: CardColors
     val icon: ImageVector
 
@@ -153,7 +157,7 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>, animateItemPlacement:
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth().composed { animateItemPlacement }, verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth().composed { modifier }, verticalAlignment = Alignment.CenterVertically
     ) {
         Card(
             modifier = Modifier
@@ -251,6 +255,8 @@ fun AddProductDialog(
 ) {
     var saveButtonIsEnabled = false
     val context = LocalContext.current
+    val focusRequester = FocusRequester()
+
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -268,7 +274,8 @@ fun AddProductDialog(
                     mutableStateOf("")
                 }
                 OutlinedTextField(
-                    modifier = Modifier.padding(top = 15.dp),
+                    modifier = Modifier.padding(top = 15.dp)
+                        .focusRequester(focusRequester),
                     value = text,
                     label = { Text(text = "Add new product to list") },
                     maxLines = 1,
@@ -312,6 +319,9 @@ fun AddProductDialog(
                     }
                 }
             }
+        }
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
         }
     }
 }
