@@ -1,5 +1,6 @@
 package pl.com.przepiora.shoppinglist
 
+
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -7,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +46,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -61,7 +65,7 @@ import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
 class MainActivity : ComponentActivity() {
     private var entryRepository = EntryRepositoryInMemory()
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -103,8 +107,8 @@ class MainActivity : ComponentActivity() {
                                     .padding(top = 36.dp)
                                     .background(color = Color.DarkGray)
                             ) {
-                                items(items = entryList) {
-                                    EntryCard(it, entryList)
+                                items(items = entryList, key = {it.text}) {
+                                    EntryCard(it, entryList, Modifier.animateItemPlacement())
                                 }
                             }
                         }
@@ -133,26 +137,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//@SuppressLint("UnrememberedMutableState")
-//@Composable
-//fun Entry(isDone: Boolean, text: String) {
-//    var isDoneMutable by remember {
-//        mutableStateOf(isDone)
-//    }
-//    Row(modifier = Modifier.background(Color.Cyan)) {
-//        Checkbox(checked = isDoneMutable, onCheckedChange = { isDoneMutable = !isDoneMutable })
-//        Text(
-//            modifier = Modifier
-//                .align(Alignment.CenterVertically)
-//                .fillMaxWidth(),
-//            text = text
-//        )
-//    }
-//}
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun EntryCard(entry: Entry, entryList: MutableList<Entry>) {
+fun EntryCard(entry: Entry, entryList: MutableList<Entry>, animateItemPlacement: Modifier) {
     val color: CardColors
     val icon: ImageVector
 
@@ -166,7 +153,7 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>) {
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth().composed { animateItemPlacement }, verticalAlignment = Alignment.CenterVertically
     ) {
         Card(
             modifier = Modifier
