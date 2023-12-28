@@ -1,9 +1,7 @@
 package pl.com.przepiora.shoppinglist
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,7 +30,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -58,38 +55,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import pl.com.przepiora.shoppinglist.model.Entry
-import pl.com.przepiora.shoppinglist.service.EntryRepository
 import pl.com.przepiora.shoppinglist.service.EntryRepositoryInMemory
 import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
 
 class MainActivity : ComponentActivity() {
-    var entryRepository = EntryRepositoryInMemory();
+    private var entryRepository = EntryRepositoryInMemory()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-//        //TODO delete that
-//        var e1 = Entry(true, "e1111111")
-//        var e2 = Entry(false, "eee222")
-//        val entryList = listOf(
-//            e1,
-//            e1,
-//            e2,
-//            e1
-//        )
-
         setContent {
             ShoppingListTheme {
-                var showDialog = remember { mutableStateOf(false) }
+                val showDialog = remember { mutableStateOf(false) }
                 val entryList = remember { mutableStateListOf<Entry>() }
                 entryRepository.update(entryList)
                 entryList.sortBy { e -> e.text }
                 entryList.sortBy { e -> e.isDone }
 
                 AnimatedVisibility(showDialog.value) {
-                    AddProductDialog(showDialog, entryRepository, entryList) {
+                    AddProductDialog(showDialog, entryList) {
 
                     }
                 }
@@ -101,6 +85,7 @@ class MainActivity : ComponentActivity() {
                     containerColor = Color.DarkGray
 
                 ) { paddingValues ->
+                    Log.d("View", "Open Scaffold with: $paddingValues padding values.")
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -213,9 +198,9 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>) {
 
             }
         }
-        var showDialog by remember {
-            mutableStateOf(false)
-        }
+//        var showDialog by remember {
+//            mutableStateOf(false)
+//        }
         Card(
             modifier = Modifier
                 .size(width = 70.dp, height = 70.dp)
@@ -223,7 +208,9 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>) {
                 .fillMaxSize(),
             colors = CardDefaults.cardColors(Color.DarkGray),
             shape = RoundedCornerShape(10.dp),
-            onClick = { Log.d("xxx", "DELETE") },
+            onClick = {
+                entryList.remove(entry)
+            },
             border = BorderStroke(3.dp, Color.LightGray)
         ) {
 
@@ -272,7 +259,6 @@ fun TopBar() {
 @Composable
 fun AddProductDialog(
     showDialog: MutableState<Boolean>,
-    entryRepository: EntryRepository,
     entryList: MutableList<Entry>,
     onDismissRequest: () -> Unit
 ) {
