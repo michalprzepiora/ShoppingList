@@ -3,6 +3,8 @@ package pl.com.przepiora.shoppinglist
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -48,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -82,10 +85,10 @@ class MainActivity : ComponentActivity() {
                 var showDialog = remember { mutableStateOf(false) }
                 val entryList = remember { mutableStateListOf<Entry>() }
                 entryRepository.update(entryList)
-                entryList.sortBy { e-> e.text }
+                entryList.sortBy { e -> e.text }
                 entryList.sortBy { e -> e.isDone }
 
-                AnimatedVisibility (showDialog.value) {
+                AnimatedVisibility(showDialog.value) {
                     AddProductDialog(showDialog, entryRepository, entryList) {
 
                     }
@@ -274,6 +277,7 @@ fun AddProductDialog(
     onDismissRequest: () -> Unit
 ) {
     var saveButtonIsEnabled = false
+    val context = LocalContext.current
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -309,7 +313,15 @@ fun AddProductDialog(
                     Button(
                         onClick = {
                             val entry = Entry(false, text)
-                            entryList.add(entry)
+                            if (entryList.contains(entry)) {
+                                Toast.makeText(
+                                    context,
+                                    "Entry is already exist.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                entryList.add(entry)
+                            }
                             showDialog.value = false
                         },
                         enabled = saveButtonIsEnabled
