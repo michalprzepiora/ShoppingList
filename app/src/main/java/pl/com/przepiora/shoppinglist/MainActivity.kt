@@ -61,12 +61,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.runBlocking
 import pl.com.przepiora.shoppinglist.model.Entry
-import pl.com.przepiora.shoppinglist.service.EntryRepositoryInMemory
+import pl.com.przepiora.shoppinglist.service.EntryRepositoryNetwork
+import pl.com.przepiora.shoppinglist.service.configuration.RetrofitConfiguration
 import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
 
+val entryRepositoryNetwork = EntryRepositoryNetwork(RetrofitConfiguration.entryRepository)
+
 class MainActivity : ComponentActivity() {
-    private var entryRepository = EntryRepositoryInMemory()
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +78,6 @@ class MainActivity : ComponentActivity() {
             ShoppingListTheme {
                 val showDialog = remember { mutableStateOf(false) }
                 val entryList = remember { mutableStateListOf<Entry>() }
-                entryRepository.update(entryList)
                 entryList.sortBy { entry -> entry.text }
                 entryList.sortBy { entry -> entry.isDone }
 
@@ -301,6 +303,10 @@ fun AddProductDialog(
                                 ).show()
                             } else {
                                 entryList.add(entry)
+                                runBlocking {
+
+                                    entryRepositoryNetwork.add(entry)
+                                }
                             }
                             showDialog.value = false
                         },
