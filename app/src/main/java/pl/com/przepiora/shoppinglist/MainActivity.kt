@@ -66,24 +66,32 @@ import pl.com.przepiora.shoppinglist.model.Entry
 import pl.com.przepiora.shoppinglist.service.EntryRepositoryNetwork
 import pl.com.przepiora.shoppinglist.service.configuration.RetrofitConfiguration
 import pl.com.przepiora.shoppinglist.ui.theme.ShoppingListTheme
+import java.util.Locale
 
 val entryRepositoryNetwork = EntryRepositoryNetwork(RetrofitConfiguration.entryRepository)
+lateinit var initialList: List<Entry>
 
 class MainActivity : ComponentActivity() {
 
+    @SuppressLint("UnrememberedMutableState")
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        runBlocking {
+            initialList = entryRepositoryNetwork.getAll()
+        }
         setContent {
             ShoppingListTheme {
                 val showDialog = remember { mutableStateOf(false) }
-                val entryList = remember { mutableStateListOf<Entry>() }
-                entryList.sortBy { entry -> entry.text }
-                entryList.sortBy { entry -> entry.isDone }
-
+                val entryList =
+                    remember { mutableStateListOf(*initialList.map { it }.toTypedArray()) }
+                val sortedWith = entryList.sortedWith(
+                    compareBy({ it.isDone },
+                        { it.text.lowercase(Locale.ENGLISH) })
+                )
+                Log.d("Entry refresh", sortedWith.toString())
                 AnimatedVisibility(showDialog.value) {
                     AddProductDialog(showDialog, entryList) {
-
                     }
                 }
                 Scaffold(
@@ -94,7 +102,7 @@ class MainActivity : ComponentActivity() {
                     containerColor = Color.DarkGray
 
                 ) { paddingValues ->
-                    Log.d("View", "Open Scaffold with: $paddingValues padding values.")
+                    Log.d("Entry refresh", "Open Scaffold with: $paddingValues padding values.")
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -112,7 +120,8 @@ class MainActivity : ComponentActivity() {
                                     .padding(top = 36.dp)
                                     .background(color = Color.DarkGray)
                             ) {
-                                items(items = entryList, key = {it.text}) {
+                                Log.d("Entry refresh", "Refresh ${entryList.size} Entry objects.")
+                                items(items = sortedWith.toList(), key = { it.text }) {
                                     EntryCard(it, entryList, Modifier.animateItemPlacement())
                                 }
                             }
@@ -159,7 +168,10 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>, modifier: Modifier) {
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth().composed { modifier }, verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxWidth()
+            .composed { modifier },
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Card(
             modifier = Modifier
@@ -191,9 +203,6 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>, modifier: Modifier) {
 
             }
         }
-//        var showDialog by remember {
-//            mutableStateOf(false)
-//        }
         Card(
             modifier = Modifier
                 .size(width = 70.dp, height = 70.dp)
@@ -221,10 +230,7 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>, modifier: Modifier) {
 
             }
         }
-
     }
-
-
 }
 
 @Composable
@@ -276,17 +282,17 @@ fun AddProductDialog(
                     mutableStateOf("")
                 }
                 OutlinedTextField(
-                    modifier = Modifier.padding(top = 15.dp)
+                    modifier = Modifier
+                        .padding(top = 15.dp)
                         .focusRequester(focusRequester),
                     value = text,
                     label = { Text(text = "Add new product to list") },
                     maxLines = 1,
                     onValueChange = {
                         text = it
-                        saveButtonIsEnabled = text.isNotEmpty()
+                        saveButtonIsEnabled = it.isNotEmpty()
                     }
                 )
-
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
