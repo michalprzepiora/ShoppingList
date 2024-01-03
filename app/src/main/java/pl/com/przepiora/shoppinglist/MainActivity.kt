@@ -212,6 +212,9 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>, modifier: Modifier) {
             shape = RoundedCornerShape(10.dp),
             onClick = {
                 entryList.remove(entry)
+                runBlocking {
+                    entryRepositoryNetwork.delete(entry)
+                }
             },
             border = BorderStroke(3.dp, Color.LightGray)
         ) {

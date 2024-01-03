@@ -13,4 +13,12 @@ class EntryRepositoryNetwork(private val entryRepository: EntryRepository) {
         Log.d("Network", "Call getAll() to firebase")
         return entryRepository.getAll().values.toMutableList()
     }
+
+    suspend fun delete(entry: Entry){
+        val id = entryRepository.getAll().filterValues { it.text == entry.text }.firstNotNullOfOrNull { entrySet -> entrySet.key }
+        Log.d("Network delete", "Id: $id")
+        if (id != null){
+            entryRepository.delete(id)
+        }
+    }
 }
