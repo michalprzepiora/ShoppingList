@@ -184,6 +184,10 @@ fun EntryCard(entry: Entry, entryList: MutableList<Entry>, modifier: Modifier) {
                 entry.isDone = !entry.isDone
                 entryList.add(index, entry)
                 entryList.removeAt(index + 1)
+                runBlocking {
+                    entry.isDone = !entry.isDone
+                    entryRepositoryNetwork.changeDone(entry)
+                }
             },
 
             ) {
